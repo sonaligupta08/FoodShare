@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Your Profile</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet" />
+  <style>
+    body {
+      background-color: #121212;
+      color: #fff;
+      font-family: 'Poppins', sans-serif;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      margin: 0;
+    }
+
+    .card {
+      padding: 30px;
+      border-radius: 10px;
+      max-width: 500px;
+      width: 100%;
+      text-align: center;
+    }
+
+    .img-container {
+      background-color: #999;
+      height: 100px;
+      width: 100px;
+      border-radius: 50%;
+      overflow: hidden;
+      margin: 0 auto 15px;
+    }
+
+    .img-container img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+
+    .form-control {
+      background-color: #2a2a2a;
+      color: #fff;
+      border: 1px solid #444;
+    }
+
+    .form-control:focus {
+      background-color: #333;
+      color: #fff;
+    }
+
+    .btn {
+      width: 100%;
+    }
+  </style>
+</head>
+
+<body>
+  <div class="card">
+    <div class="img-container">
+      <img id="profile-image" src="https://via.placeholder.com/100" alt="profile picture" />
+    </div>
+
+    <div class="mb-3">
+      <input type="file" id="edit-image" class="form-control" accept="image/*">
+    </div>
+
+    <h2 id="profile-name">Unknown User</h2>
+    <p id="profile-email">📧 Not available</p>
+    <p id="profile-address">📍 No address</p>
+
+    <button class="btn btn-primary mt-2" onclick="showEditForm()">Edit Profile</button>
+    <a href="dashboard.html" class="btn btn-outline-success mt-3">Go to Dashboard</a>
+
+    <!-- Hidden Form -->
+    <form id="edit-form" class="mt-4" style="display: none;">
+      <div class="mb-2">
+        <input type="text" id="edit-name" class="form-control" placeholder="Enter new name">
+      </div>
+      <div class="mb-2">
+        <input type="email" id="edit-email" class="form-control" placeholder="Enter new email">
+      </div>
+      <div class="mb-2">
+        <input type="text" id="edit-address" class="form-control" placeholder="Enter new address">
+      </div>
+      <button type="submit" class="btn btn-success btn-sm mt-2">Save Changes</button>
+    </form>
+  </div>
+
+  <script>
+    const name = localStorage.getItem("userName");
+    const email = localStorage.getItem("userEmail");
+    const address = localStorage.getItem("userAddress");
+    const image = localStorage.getItem("userImage");
+
+    const nameEl = document.getElementById("profile-name");
+    const emailEl = document.getElementById("profile-email");
+    const addressEl = document.getElementById("profile-address");
+    const imageEl = document.getElementById("profile-image");
+
+    // Redirect if user not logged in
+    if (!email) {
+      alert("Please login first.");
+      window.location.href = "login.html";
+    }
+
+    // Set initial profile details
+    nameEl.textContent = name || "Unknown User";
+    emailEl.textContent = "📧 " + (email || "Not available");
+    addressEl.textContent = "📍 " + (address || "No address");
+    if (image) imageEl.src = image;
+
+    // Show editable form with pre-filled values
+    function showEditForm() {
+      document.getElementById("edit-form").style.display = "block";
+      document.getElementById("edit-name").value = name || "";
+      document.getElementById("edit-email").value = email || "";
+      document.getElementById("edit-address").value = address || "";
+    }
+
+    // Save updated profile
+    document.getElementById("edit-form").addEventListener("submit", function (e) {
+      e.preventDefault();
+
+      const newName = document.getElementById("edit-name").value.trim();
+      const newEmail = document.getElementById("edit-email").value.trim();
+      const newAddress = document.getElementById("edit-address").value.trim();
+
+      if (!newName || !newEmail || !newAddress) {
+        alert("Please fill out all fields.");
+        return;
+      }
+
+      localStorage.setItem("userName", newName);
+      localStorage.setItem("userEmail", newEmail);
+      localStorage.setItem("userAddress", newAddress);
+
+      nameEl.textContent = newName;
+      emailEl.textContent = "📧 " + newEmail;
+      addressEl.textContent = "📍 " + newAddress;
+
+      alert("Profile updated!");
+      document.getElementById("edit-form").style.display = "none";
+    });
+
+    // Upload and preview image + save to localStorage
+    document.getElementById("edit-image").addEventListener("change", function () {
+      const file = this.files[0];
+      if (file) {
+        const reader = new FileReader();
+        reader.onload = function (e) {
+          imageEl.src = e.target.result;
+          localStorage.setItem("userImage", e.target.result);
+        };
+        reader.readAsDataURL(file);
+      }
+    });
+  </script>
+</body>
+
+</html>

@@ -1,0 +1,295 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<title>FoodShare Dashboard</title>
+
+	<!-- Bootstrap + Icons -->
+	<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+	<link href='https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css' rel='stylesheet'>
+
+	<style>
+		body {
+			background-color: #0d1117;
+			color: #e6edf3;
+			font-family: 'Poppins', sans-serif;
+		}
+
+		.navbar {
+			background-color: #161b22;
+			border-bottom: 1px solid #238636;
+		}
+
+		.navbar-brand,
+		.nav-link {
+			color: #fff !important;
+		}
+
+		.nav-link:hover {
+			color: #2ea043 !important;
+		}
+
+		.btn-success {
+			background-color: #238636 !important;
+			border: none;
+		}
+
+		.btn-success:hover {
+			background-color: #2ea043 !important;
+		}
+
+		.card {
+			background-color: #161b22;
+			border: 1px solid #30363d;
+			border-radius: 12px;
+			color: #e6edf3;
+			padding: 20px;
+			box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+			transition: all 0.2s ease-in-out;
+		}
+
+		.card:hover {
+			transform: translateY(-4px);
+			box-shadow: 0 8px 20px rgba(56, 139, 253, 0.3);
+		}
+
+		.card h5,
+		.card p,
+		.card small {
+			color: #e6edf3 !important;
+		}
+
+		.card small {
+			display: block;
+			color: #8b949e !important;
+		}
+
+		#Donationform {
+			background-color: #161b22;
+			padding: 25px;
+			border-radius: 12px;
+			border: 1px solid #30363d;
+			display: none;
+		}
+
+		input,
+		textarea {
+			background-color: #0d1117 !important;
+			color: #e6edf3 !important;
+			border: 1px solid #30363d !important;
+		}
+
+		.img-preview {
+			width: 100%;
+			height: 180px;
+			object-fit: cover;
+			border-radius: 10px;
+			margin-bottom: 10px;
+		}
+
+		.donation-list {
+			margin-top: 30px;
+		}
+	</style>
+</head>
+
+<body>
+	<!-- Navbar -->
+	<nav class="navbar navbar-expand-lg px-4">
+		<a class="navbar-brand fw-semibold" href="#">🍱 FoodShare</a>
+		<button class="navbar-toggler bg-light" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+			<span class="navbar-toggler-icon"></span>
+		</button>
+		<div class="collapse navbar-collapse ms-3" id="navbarNav">
+			<ul class="navbar-nav">
+				<li class="nav-item"><a class="nav-link" href="profile.html"><i class='bx bxs-user-circle'></i>
+						Profile</a></li>
+				<li class="nav-item"><a class="nav-link" href="#"><i class='bx bx-star'></i> Review</a></li>
+				<li class="nav-item"><a class="nav-link" href="#"><i class='bx bx-badge-check'></i> Badges</a></li>
+			</ul>
+		</div>
+	</nav>
+
+	<!-- Main Section -->
+	<div class="container py-4">
+		<div class="d-flex justify-content-between align-items-center mb-3">
+			<h3>Dashboard</h3>
+			<button id="addButton" class="btn btn-success"><i class='bx bx-plus'></i> Add Donation</button>
+		</div>
+
+		<!-- Add Donation Form -->
+		<div id="Donationform">
+			<h5 class="mb-3 text-success"><i class='bx bx-donate-heart'></i> New Donation</h5>
+			<form id="donationForm">
+				<div class="mb-3">
+					<label class="form-label">Upload Image</label>
+					<input type="file" class="form-control" id="photo" accept="image/*" required>
+					<img id="preview" class="img-preview mt-2 d-none" alt="preview">
+				</div>
+				<div class="mb-3">
+					<label class="form-label">Food Description</label>
+					<textarea class="form-control" id="food" rows="2" placeholder="Describe the food..."
+						required></textarea>
+				</div>
+				<div class="mb-3">
+					<label class="form-label">Address</label>
+					<input type="text" class="form-control" id="location" placeholder="Enter full address" required>
+				</div>
+				<div class="mb-3">
+					<label class="form-label">Landmark</label>
+					<input type="text" class="form-control" id="landmark" placeholder="Nearby landmark" required>
+				</div>
+				<button type="submit" class="btn btn-success w-100">Submit</button>
+			</form>
+		</div>
+
+		<!-- Donation List -->
+		<div id="donationList" class="donation-list row g-3"></div>
+	</div>
+
+	<script>
+		document.addEventListener("DOMContentLoaded", () => {
+			const addButton = document.getElementById("addButton");
+			const donationFormDiv = document.getElementById("Donationform");
+			const donationList = document.getElementById("donationList");
+			const previewImg = document.getElementById("preview");
+			const currentUserId = Number(localStorage.getItem("userId") || 1);
+
+			// Toggle form visibility
+			addButton.addEventListener("click", () => {
+				donationFormDiv.style.display = donationFormDiv.style.display === "none" ? "block" : "none";
+			});
+
+			// Preview uploaded image
+			document.getElementById("photo").addEventListener("change", function () {
+				const file = this.files[0];
+				if (file) {
+					const reader = new FileReader();
+					reader.onload = e => {
+						previewImg.src = e.target.result;
+						previewImg.classList.remove("d-none");
+					};
+					reader.readAsDataURL(file);
+				}
+			});
+
+			// 🧩 Load donations with role-based buttons
+			async function loadDonations() {
+				const res = await fetch("http://localhost:8080/api/donations");
+				const donations = await res.json();
+				donationList.innerHTML = "";
+
+				donations.forEach(d => {
+					const col = document.createElement("div");
+					col.className = "col-md-4";
+
+					const isOwner = d.donor.id === currentUserId;
+					const isTaken = d.taken;
+
+					let actionBtn = "";
+					if (isOwner) {
+						// show delete button
+						actionBtn = `<button class="btn btn-danger btn-sm mt-2 delete-btn" data-id="${d.id}">Delete</button>`;
+					} else if (!isTaken) {
+						// show take button for others
+						const email = d.donorEmail || "N/A";
+						const mobile = d.donorMobile || "N/A";
+						actionBtn = `<button class="btn btn-success btn-sm mt-2 take-btn" data-email="${email}" data-mobile="${mobile}">Take</button>`;
+					} else {
+						actionBtn = `<span class="badge bg-secondary mt-2">Taken</span>`;
+					}
+
+					col.innerHTML = `
+		        <div class="card p-3 text-center">
+		          ${d.imageUrl ? `<img src="${d.imageUrl}" class="img-preview">` : ""}
+		          <h5 class="mt-2">${d.foodDescription}</h5>
+		          <p class="small">📍 ${d.address}</p>
+		          <p class="small">🏷️ ${d.landmark}</p>
+		          ${actionBtn}
+		        </div>
+		      `;
+
+					donationList.appendChild(col);
+				});
+
+				// 🗑 Delete (only for owner)
+				document.querySelectorAll(".delete-btn").forEach(btn => {
+					btn.addEventListener("click", async function () {
+						const id = this.dataset.id;
+						if (confirm("Delete this donation?")) {
+							await fetch(`http://localhost:8080/api/donations/${id}/${currentUserId}`, {
+								method: "DELETE"
+							});
+							loadDonations();
+						}
+					});
+				});
+
+				// 📞 Take (show donor contact)
+				document.querySelectorAll(".take-btn").forEach(btn => {
+					btn.addEventListener("click", function () {
+						const email = this.dataset.email;
+						const mobile = this.dataset.mobile;
+						alert(`📞 Contact Donor\n\n📧 Email: ${email}\n📱 Mobile: ${mobile}`);
+					});
+				});
+			}
+
+			// Add new donation
+			document.getElementById("donationForm").addEventListener("submit", async function (e) {
+				e.preventDefault();
+				const foodDescription = document.getElementById("food").value.trim();
+				const address = document.getElementById("location").value.trim();
+				const landmark = document.getElementById("landmark").value.trim();
+				const photo = document.getElementById("photo").files[0];
+
+				if (!foodDescription || !address || !landmark || !photo) {
+					alert("All fields are required!");
+					return;
+				}
+
+				const formData = new FormData();
+				formData.append("file", photo);
+
+				// Upload image
+				const uploadRes = await fetch("http://localhost:8080/api/donations/upload", {
+					method: "POST",
+					body: formData
+				});
+				const imageUrl = await uploadRes.text();
+
+				// Save donation
+				const donation = {
+					foodDescription,
+					address,
+					landmark,
+					donorId: Number(currentUserId),
+					donorEmail: localStorage.getItem("userEmail"),
+					donorMobile: localStorage.getItem("userMobile"),
+					imageUrl
+				};
+
+				await fetch("http://localhost:8080/api/donations", {
+					method: "POST",
+					headers: {"Content-Type": "application/json"},
+					body: JSON.stringify(donation)
+				});
+
+				alert("Donation added successfully!");
+				this.reset();
+				previewImg.classList.add("d-none");
+				donationFormDiv.style.display = "none";
+				loadDonations();
+			});
+
+			loadDonations();
+		});
+
+	</script>
+
+	<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+
+</html>
