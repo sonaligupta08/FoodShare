@@ -3,6 +3,8 @@
 
 <img width="1847" height="867" alt="Image" src="https://github.com/user-attachments/assets/ebc4d562-f056-4b9b-9c26-fafafce3ce2b" />
 
+<img width="742" height="694" alt="Image" src="https://github.com/user-attachments/assets/1f3cce18-edd1-4297-a8e1-cea7d3a72da6" />
+
 
 ✨ Features ----
 
